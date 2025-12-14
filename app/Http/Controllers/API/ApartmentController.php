@@ -1,0 +1,199 @@
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Http\Controllers\API\BaseController as BaseController;
+use App\Http\Requests\StoreApartmentRequest;
+use App\Http\Resources\ApartmentResource;
+use App\Models\Apartment;
+use App\Models\ApartmentImage;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+
+class ApartmentController extends BaseController
+{
+    
+       //Display a listing of the resource.
+     
+    public function index(Request $request)
+    {
+        $query = Apartment::with(['owner', 'images']);
+
+        // Apply filters
+        if ($request->has('province')) {
+            $query->inProvince($request->province);
+        }
+
+        if ($request->has('city')) {
+            $query->inCity($request->city);
+        }
+
+        if ($request->has('min_price') || $request->has('max_price')) {
+            $min = $request->min_price ?? 0;
+            $max = $request->max_price ?? 999999999;
+            $query->priceBetween($min, $max);
+        }
+
+        if ($request->has('features')) {
+            $features = explode(',', $request->features);
+            $query->hasFeatures($features);
+        }
+
+        // Apply status filter (only show available apartments by default)
+        if (!$request->has('status')) {
+            $query->where('status', 'available');
+        } elseif ($request->status != 'all') {
+            $query->where('status', $request->status);
+        }
+
+        $apartments = $query->paginate(10);
+
+        return $this->sendPaginatedResponse($apartments, 'apartments retrieved');
+    }
+
+    
+     // Store a newly created resource in storage.
+     
+    public function store(StoreApartmentRequest $request)
+    {
+        try {
+            $user = $request->user();
+
+            // Create apartment
+            $apartment = $user->apartments()->create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'price' => $request->price,
+                'location' => $request->location,
+                'province' => $request->province,
+                'city' => $request->city,
+                'features' => $request->features ?? [],
+                'status' => 'available'
+            ]);
+
+            // Handle apartment images
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $imagePath = $image->store('apartment_images', 'public');
+                    ApartmentImage::create([
+                        'apartment_id' => $apartment->id,
+                        'image_path' => $imagePath
+                    ]);
+                }
+            }
+
+            // Load relationships
+            $apartment->load(['owner', 'images']);
+
+            return $this->sendResponse(new ApartmentResource($apartment), 'apartment created');
+
+} catch (Exception $e) {
+    return $this->sendError('apartment creation failed', ['error' => $e->getMessage()]);
+}
+    }
+
+    
+      //Display the specified resource.
+     
+    public function show(Apartment $apartment)
+    {
+        $apartment->load(['owner', 'images']);
+        return $this->sendResponse(new ApartmentResource($apartment), 'apartment retrieved');
+    }
+
+    
+       //Update the specified resource in storage.
+     
+    public function update(Request $request, Apartment $apartment)
+    {
+        // Check if user is the owner of the apartment
+        if ($request->user()->id !== $apartment->owner_id) {
+            return $this->sendError('unauthorized', [], 401);
+        }
+
+        $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
+            'price' => 'sometimes|numeric|min:0',
+            'location' => 'sometimes|string|max:255',
+            'province' => 'sometimes|string|max:100',
+            'city' => 'sometimes|string|max:100',
+            'features' => 'nullable|array',
+            'status' => 'sometimes|in:available,booked,maintenance'
+        ]);
+
+        try {
+            $apartment->update($request->only([
+                'title', 'description', 'price', 'location', 'province', 'city', 'features', 'status'
+            ]));
+
+            // Load relationships
+            $apartment->load(['owner', 'images']);
+
+            return $this->sendResponse(new ApartmentResource($apartment), 'apartment updated');
+        } catch (Exception $e) {
+            return $this->sendError('apartment update failed', ['error' => $e->getMessage()]);
+        }
+    }
+
+    
+     // Remove the specified resource from storage.
+     
+    public function destroy(Request $request, Apartment $apartment)
+    {
+        // Check if user is the owner of the apartment or admin
+        if ($request->user()->id !== $apartment->owner_id && !$request->user()->isAdmin()) {
+            
+            return $this->sendError('unauthorized', [], 401);
+        }
+
+        try {
+            // Delete apartment images from storage
+            foreach ($apartment->images as $image) {
+                Storage::disk('public')->delete($image->image_path);
+            }
+
+            // Delete apartment
+            $apartment->delete();
+
+            return $this->sendResponse([], 'apartment deleted');
+                 } catch (Exception $e) {
+                   return $this->sendError('apartment deletion failed', ['error' => $e->getMessage()]);
+                 }
+                }
+
+    
+      //Toggle favorite status for an apartment
+     
+    public function toggleFavorite(Request $request, Apartment $apartment)
+    {
+        $user = $request->user();
+        
+        // Check if already favorited
+        $favorite = $user->favorites()->where('apartment_id', $apartment->id)->first();
+        
+        if ($favorite) {
+            // Remove from favorites
+            $favorite->delete();
+            return $this->sendResponse([], 'favorite removed');
+        } else {
+            // Add to favorites
+            $user->favorites()->create(['apartment_id' => $apartment->id]);
+            return $this->sendResponse([], 'favorite added');
+        }
+    }
+
+    
+      //Get user's favorite apartments
+     
+    public function favorites(Request $request)
+    {
+        $favorites = $request->user()->favorites()->with('apartment.owner', 'apartment.images')->paginate(10);
+        $apartments = $favorites->map(function ($favorite) {
+            return $favorite->apartment;
+        });
+
+        return $this->sendPaginatedResponse($apartments, 'favorites retrieved');
+    }
+}
