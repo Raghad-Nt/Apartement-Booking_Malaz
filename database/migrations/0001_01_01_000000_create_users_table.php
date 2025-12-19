@@ -18,9 +18,9 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            // Added fields for apartment booking system
+        
             $table->enum('role', ['admin', 'tenant', 'renter'])->default('tenant');
-            $table->enum('status', ['pending', 'active', 'inactive', 'suspended'])->default('pending');
+            $table->enum('status', ['pending', 'active','rejected'])->default('pending');
             $table->string('mobile')->unique();
             $table->string('profile_image')->nullable();
             $table->string('id_image')->nullable();

@@ -51,7 +51,7 @@ class User extends Authenticatable
     }
 
     
-      //Check if user is admin
+      
      
     public function isAdmin()
     {
@@ -59,7 +59,7 @@ class User extends Authenticatable
     }
 
     
-      //Check if user is tenant (renter)
+      
      
     public function isTenant()
     {
@@ -67,7 +67,7 @@ class User extends Authenticatable
     }
 
     
-      //Check if user is renter (owner)
+      
      
     public function isRenter()
     {
@@ -75,15 +75,41 @@ class User extends Authenticatable
     }
 
     
-     // Check if user account is active
+     
      
     public function isActive()
     {
         return $this->status === 'active';
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
-      //User apartments (if user is a renter/owner)
+      
      
     public function apartments()
     {
@@ -91,7 +117,7 @@ class User extends Authenticatable
     }
 
     
-      //User bookings
+      
      
     public function bookings()
     {
@@ -99,7 +125,7 @@ class User extends Authenticatable
     }
 
     
-      //User reviews
+      
      
     public function reviews()
     {
@@ -107,7 +133,7 @@ class User extends Authenticatable
     }
 
     
-      //User favorites
+      
      
     public function favorites()
     {
@@ -115,7 +141,6 @@ class User extends Authenticatable
     }
 
     
-      //Sent messages
      
     public function sentMessages()
     {
@@ -123,7 +148,7 @@ class User extends Authenticatable
     }
 
     
-      //Received messages
+      
      
     public function receivedMessages()
     {

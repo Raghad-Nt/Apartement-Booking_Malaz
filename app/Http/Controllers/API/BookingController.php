@@ -13,23 +13,23 @@ use Exception;
 class BookingController extends BaseController
 {
     
-      //Display a listing of the resource.
+      
      
     public function index(Request $request)
     {
         $query = Booking::with(['user', 'apartment']);
 
-        // Filter by user
+        
         if ($request->has('user_id')) {
             $query->where('user_id', $request->user_id);
         }
 
-        // Filter by apartment
+        
         if ($request->has('apartment_id')) {
             $query->where('apartment_id', $request->apartment_id);
         }
 
-        // Filter by status
+        
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
@@ -40,7 +40,7 @@ class BookingController extends BaseController
       }
 
     
-      //Store a newly created resource in storage.
+      
      
     public function store(StoreBookingRequest $request)
     {
@@ -48,13 +48,13 @@ class BookingController extends BaseController
             $user = $request->user();
             $apartment = Apartment::findOrFail($request->apartment_id);
 
-            // Calculate total price
+            
             $startDate = Carbon::parse($request->start_date);
             $endDate = Carbon::parse($request->end_date);
             $days = $startDate->diffInDays($endDate);
             $totalPrice = $days * $apartment->price;
 
-            // Create booking with pending status
+            
             $booking = $user->bookings()->create([
                 'apartment_id' => $request->apartment_id,
                 'start_date' => $request->start_date,
@@ -63,7 +63,7 @@ class BookingController extends BaseController
                 'total_price' => $totalPrice
             ]);
 
-            // Load relationships
+            
             $booking->load(['user', 'apartment']);
 
             return $this->sendResponse(new BookingResource($booking), 'booking created');
@@ -74,7 +74,7 @@ class BookingController extends BaseController
     }
 
     
-     // Display the specified resource.
+     
      
     public function show(Booking $booking)
     {
@@ -83,15 +83,15 @@ class BookingController extends BaseController
           }
 
     
-      //Update the specified resource in storage.
+      
      
     public function update(Request $request, Booking $booking)
     {
         $user = $request->user();
 
-        // Only admin or apartment owner can update booking status
+        
         if (!$user->isAdmin() && $user->id !== $booking->apartment->owner_id) {
-            return $this->sendError('unauthorized', [], 401);
+            return $this->sendError('unauthorized');
                   }
 
         $request->validate([
@@ -101,7 +101,7 @@ class BookingController extends BaseController
         try {
             $booking->update(['status' => $request->status]);
 
-            // Load relationships
+            
             $booking->load(['user', 'apartment']);
 
             return $this->sendResponse(new BookingResource($booking), 'booking status updated');
@@ -111,16 +111,16 @@ class BookingController extends BaseController
     }
 
     
-      //Cancel a booking (by the user who made it)
+      
      
     public function cancel(Request $request, Booking $booking)
     {
-        // Only the user who made the booking can cancel it
+        
         if ($request->user()->id !== $booking->user_id) {
             return $this->sendError('unauthorized', ['error' => 'unauthorized']);
         }
 
-        // Only pending bookings can be cancelled
+        
         if ($booking->status !== 'pending') {
             return $this->sendError('invalid action', ['error' => 'invalid action']);
         }
@@ -128,7 +128,7 @@ class BookingController extends BaseController
         try {
             $booking->update(['status' => 'cancelled']);
 
-            // Load relationships
+            
             $booking->load(['user', 'apartment']);
 
             return $this->sendResponse(new BookingResource($booking), 'booking cancelled');
@@ -138,7 +138,7 @@ class BookingController extends BaseController
     }
 
     
-      //Get user's bookings
+      
      
     public function myBookings(Request $request)
     {

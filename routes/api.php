@@ -11,18 +11,38 @@ use App\Http\Controllers\API\AdminController;
 
 
 
+
+
+
+
+
+
+
+
+
+
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [RegisterController::class, 'login']);
 
-// Public routes
-Route::get('/apartments', [ApartmentController::class, 'index']);
-Route::get('/apartments/{apartment}', [ApartmentController::class, 'show']);
-Route::get('/apartments/{apartment}/reviews', [ReviewController::class, 'apartmentReviews']);
 
-// Protected routes
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [RegisterController::class, 'profile']);
     Route::put('/user', [RegisterController::class, 'updateProfile']);
+    Route::post('/logout', [RegisterController::class, 'logout']);
+
+    
+    Route::middleware('admin')->group(function () {
+        Route::get('/admin/users/pending', [AdminController::class, 'pendingUsers']);
+        Route::post('/admin/users/{user}/approve', [AdminController::class, 'approveUser']);
+        Route::post('/admin/users/{user}/reject', [AdminController::class, 'rejectUser']);
+        Route::get('/admin/statistics', [AdminController::class, 'statistics']);
+    });
+    // Public routes
+    Route::get('/apartments', [ApartmentController::class, 'index']);
+    Route::get('/apartments/{apartment}', [ApartmentController::class, 'show']);
+    Route::get('/apartments/{apartment}/reviews', [ReviewController::class, 'apartmentReviews']);
+
     
     // Apartment routes for owners (renters)
     Route::post('/apartments', [ApartmentController::class, 'store']);
@@ -37,8 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::get('/bookings', [BookingController::class, 'index']);
     Route::get('/bookings/{booking}', [BookingController::class, 'show']);
-    Route::put('/bookings/{booking}', [BookingController::class, 'update']); // For owner/admin to confirm/reject
-    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']); // For user to cancel
+    Route::put('/bookings/{booking}', [BookingController::class, 'update']); 
+    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
     Route::get('/my-bookings', [BookingController::class, 'myBookings']);
     
     // Review routes
@@ -53,11 +73,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/inbox', [MessageController::class, 'inbox']);
     Route::get('/messages/conversation/{user}', [MessageController::class, 'conversation']);
     
-    // Admin routes
-    Route::middleware('admin')->group(function () {
-        Route::get('/admin/users/pending', [AdminController::class, 'pendingUsers']);
-        Route::post('/admin/users/{user}/approve', [AdminController::class, 'approveUser']);
-        Route::post('/admin/users/{user}/reject', [AdminController::class, 'rejectUser']);
-        Route::get('/admin/statistics', [AdminController::class, 'statistics']);
-    });
+    
 });

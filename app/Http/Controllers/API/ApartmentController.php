@@ -14,13 +14,13 @@ use Illuminate\Support\Facades\Storage;
 class ApartmentController extends BaseController
 {
     
-       //Display a listing of the resource.
+       
      
     public function index(Request $request)
     {
         $query = Apartment::with(['owner', 'images']);
 
-        // Apply filters
+        
         if ($request->has('province')) {
             $query->inProvince($request->province);
         }
@@ -40,7 +40,7 @@ class ApartmentController extends BaseController
             $query->hasFeatures($features);
         }
 
-        // Apply status filter (only show available apartments by default)
+        
         if (!$request->has('status')) {
             $query->where('status', 'available');
         } elseif ($request->status != 'all') {
@@ -53,14 +53,14 @@ class ApartmentController extends BaseController
     }
 
     
-     // Store a newly created resource in storage.
+     
      
     public function store(StoreApartmentRequest $request)
     {
         try {
             $user = $request->user();
 
-            // Create apartment
+            
             $apartment = $user->apartments()->create([
                 'title' => $request->title,
                 'description' => $request->description,
@@ -72,7 +72,7 @@ class ApartmentController extends BaseController
                 'status' => 'available'
             ]);
 
-            // Handle apartment images
+            
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     $imagePath = $image->store('apartment_images', 'public');
@@ -83,7 +83,7 @@ class ApartmentController extends BaseController
                 }
             }
 
-            // Load relationships
+            
             $apartment->load(['owner', 'images']);
 
             return $this->sendResponse(new ApartmentResource($apartment), 'apartment created');
@@ -94,7 +94,7 @@ class ApartmentController extends BaseController
     }
 
     
-      //Display the specified resource.
+     
      
     public function show(Apartment $apartment)
     {
@@ -103,13 +103,13 @@ class ApartmentController extends BaseController
     }
 
     
-       //Update the specified resource in storage.
+       
      
     public function update(Request $request, Apartment $apartment)
     {
-        // Check if user is the owner of the apartment
+        
         if ($request->user()->id !== $apartment->owner_id) {
-            return $this->sendError('unauthorized', [], 401);
+            return $this->sendError('unauthorized');
         }
 
         $request->validate([
@@ -128,7 +128,7 @@ class ApartmentController extends BaseController
                 'title', 'description', 'price', 'location', 'province', 'city', 'features', 'status'
             ]));
 
-            // Load relationships
+            
             $apartment->load(['owner', 'images']);
 
             return $this->sendResponse(new ApartmentResource($apartment), 'apartment updated');
@@ -138,23 +138,23 @@ class ApartmentController extends BaseController
     }
 
     
-     // Remove the specified resource from storage.
+     
      
     public function destroy(Request $request, Apartment $apartment)
     {
-        // Check if user is the owner of the apartment or admin
+        
         if ($request->user()->id !== $apartment->owner_id && !$request->user()->isAdmin()) {
             
-            return $this->sendError('unauthorized', [], 401);
+            return $this->sendError('unauthorized');
         }
 
         try {
-            // Delete apartment images from storage
+            
             foreach ($apartment->images as $image) {
                 Storage::disk('public')->delete($image->image_path);
             }
 
-            // Delete apartment
+            
             $apartment->delete();
 
             return $this->sendResponse([], 'apartment deleted');
@@ -164,28 +164,28 @@ class ApartmentController extends BaseController
                 }
 
     
-      //Toggle favorite status for an apartment
+      
      
     public function toggleFavorite(Request $request, Apartment $apartment)
     {
         $user = $request->user();
         
-        // Check if already favorited
+        
         $favorite = $user->favorites()->where('apartment_id', $apartment->id)->first();
         
         if ($favorite) {
-            // Remove from favorites
+            
             $favorite->delete();
             return $this->sendResponse([], 'favorite removed');
         } else {
-            // Add to favorites
+           
             $user->favorites()->create(['apartment_id' => $apartment->id]);
             return $this->sendResponse([], 'favorite added');
         }
     }
 
     
-      //Get user's favorite apartments
+      
      
     public function favorites(Request $request)
     {

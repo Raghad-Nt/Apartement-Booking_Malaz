@@ -10,58 +10,58 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\JsonResponse;
-   
+use Illuminate\Http\Response;
+
+
+
+
+
 class RegisterController extends BaseController
 {
-    /**
-     * Register api
-     *
-     * @return \Illuminate\Http\Response
-     */
+    
+    
     public function register(RegisterRequest $request): JsonResponse
     {
         try {
-            // Handle ID image upload
+            
             $idImagePath = null;
             if ($request->hasFile('id_image')) {
                 $idImagePath = $request->file('id_image')->store('id_images', 'public');
             }
 
-            // Handle profile image upload
+           
             $profileImagePath = null;
             if ($request->hasFile('profile_image')) {
                 $profileImagePath = $request->file('profile_image')->store('profile_images', 'public');
             }
 
-            // Create user with pending status
+           
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'mobile' => $request->mobile,
                 'role' => $request->role,
-                'status' => 'pending', // Default status is pending until admin approval
+                'status' => 'pending', 
                 'id_image' => $idImagePath,
                 'profile_image' => $profileImagePath
             ]);
 
-            // Create token for the user
-            $success['token'] =  $user->createToken('MyApp')->plainTextToken;
+           
+            
             $success['name'] =  $user->name;
             $success['role'] =  $user->role;
             $success['status'] =  $user->status;
+            $success['token'] =  $user->createToken('MyApp')->plainTextToken;
 
-            return $this->sendResponse($success, 'messages.register_success');
+            return $this->sendResponse($success, 'register success');
         } catch (Exception $e) {
             return $this->sendError('messages.registration_failed', ['error' => $e->getMessage()]);
         }
     }
    
-    /**
-     * Login api
-     *
-     * @return \Illuminate\Http\Response
-     */
+    
+     
     public function login(Request $request): JsonResponse
     {
         $request->validate([
@@ -69,35 +69,36 @@ class RegisterController extends BaseController
             'password' => 'required|string'
         ]);
 
-        // Find user by mobile
+       
         $user = User::where('mobile', $request->mobile)->first();
 
-        // Check if user exists and password is correct
+        
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return $this->sendError('messages.invalid_credentials', ['error' => 'messages.invalid_credentials']);
+            return $this->sendError('messages.invalid_credentials');
         }
 
-        // Check if user account is active
+        
         if ($user->status !== 'active') {
-            return $this->sendError('messages.account_not_active', ['error' => 'messages.account_not_active']);
+            return $this->sendError('messages.account_not_active');
         }
 
-        // Create token for the user
-        $success['token'] =  $user->createToken('MyApp')->plainTextToken;
+       
+       
         $success['name'] =  $user->name;
         $success['role'] =  $user->role;
+        $success['token'] =  $user->createToken('MyApp')->plainTextToken;
 
-        return $this->sendResponse($success, 'messages.login_success');
+        return $this->sendResponse($success, 'login success');
     }
 
     
-      //Get user profile
+      
      
     public function profile(Request $request): JsonResponse
     {
         $user = $request->user();
         
-        // Add full URLs to images if they exist
+        
         $userData = $user->toArray();
         if ($user->id_image) {
             $userData['id_image_url'] = asset('storage/' . $user->id_image);
@@ -106,11 +107,11 @@ class RegisterController extends BaseController
             $userData['profile_image_url'] = asset('storage/' . $user->profile_image);
         }
 
-        return $this->sendResponse($userData, 'messages.user_profile_retrieved');
+        return $this->sendResponse($userData, 'user profile retrieved');
     }
 
     
-      //Update user profile
+      
      
     public function updateProfile(Request $request): JsonResponse
     {
@@ -124,9 +125,9 @@ class RegisterController extends BaseController
         ]);
 
         try {
-            // Handle profile image upload
+           
             if ($request->hasFile('profile_image')) {
-                // Delete old profile image if exists
+                
                 if ($user->profile_image) {
                     Storage::disk('public')->delete($user->profile_image);
                 }
@@ -135,7 +136,7 @@ class RegisterController extends BaseController
                 $user->profile_image = $profileImagePath;
             }
 
-            // Update other fields if provided
+            
             if ($request->has('name')) {
                 $user->name = $request->name;
             }
@@ -150,7 +151,7 @@ class RegisterController extends BaseController
 
             $user->save();
 
-            // Add full URLs to images if they exist
+            
             $userData = $user->toArray();
             if ($user->id_image) {
                 $userData['id_image_url'] = asset('storage/' . $user->id_image);
@@ -159,9 +160,23 @@ class RegisterController extends BaseController
                 $userData['profile_image_url'] = asset('storage/' . $user->profile_image);
             }
 
-            return $this->sendResponse($userData, 'messages.profile_updated');
+            return $this->sendResponse($userData, 'profile updated');
         } catch (Exception $e) {
             return $this->sendError('messages.profile_update_failed', ['error' => $e->getMessage()]);
+        }
+    }
+    
+    
+     
+    public function logout(Request $request): JsonResponse
+    {
+        try {
+           
+            $request->user()->currentAccessToken()->delete();
+
+            return $this->sendResponse([], 'logout success');
+        } catch (Exception $e) {
+            return $this->sendError('messages.logout_failed', ['error' => $e->getMessage()]);
         }
     }
 }

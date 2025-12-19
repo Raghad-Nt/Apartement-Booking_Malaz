@@ -15,38 +15,35 @@ class BaseController extends Controller
     public function sendResponse($result, $message): JsonResponse
     {
         $response = [
-            'success' => true,
-            'data'    => $result,
             'message' => __($message),
+            'data'    => $result
+            
         ];
   
         return response()->json($response, 200);
     }
   
    
-    public function sendError($error, $errorMessages = [], $code = 404): JsonResponse
+    public function sendError($error, $errorMessages = []): JsonResponse
     {
         $response = [
-            'success' => false,
-            'message' => __($error),
+            'message' => __($error)
         ];
   
         if(!empty($errorMessages)){
             $response['data'] = $errorMessages;
         }
   
-        return response()->json($response, $code);
+        return response()->json($response, 404);
     }
 
-    
-      //Send paginated response
+      
      
     public function sendPaginatedResponse($paginator, $message = ''): JsonResponse
     {
         $response = [
-            'success' => true,
-            'data' => $paginator->items(),
             'message' => __($message),
+            'data' => $paginator->items(),
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),

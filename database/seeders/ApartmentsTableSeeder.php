@@ -15,7 +15,7 @@ class ApartmentsTableSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create sample provinces and cities for filtering
+        
         $locations = [
             ['province' => 'Damascus', 'city' => 'Damascus'],
             ['province' => 'Aleppo', 'city' => 'Aleppo'],
@@ -24,16 +24,16 @@ class ApartmentsTableSeeder extends Seeder
             ['province' => 'Tartous', 'city' => 'Tartous']
         ];
 
-        // Create 10 sample apartments
+        
         for ($i = 0; $i < 10; $i++) {
-            // Randomly select a location
+            
             $location = $locations[array_rand($locations)];
             
-            // Select random features
+            
             $allFeatures = ['wifi', 'parking', 'ac', 'kitchen'];
             $selectedFeatures = array_slice($allFeatures, 0, rand(1, count($allFeatures)));
             
-            // Create apartment
+            
             $apartment = Apartment::create([
                 'title' => 'Beautiful Apartment ' . ($i + 1),
                 'description' => 'This is a beautiful apartment located in ' . $location['city'] . ', ' . $location['province'] . '. It has all modern amenities and is perfect for families.',
@@ -46,7 +46,7 @@ class ApartmentsTableSeeder extends Seeder
                 'status' => 'available'
             ]);
 
-            // Create 3 sample images for each apartment
+            
             for ($j = 0; $j < 3; $j++) {
                 ApartmentImage::create([
                     'apartment_id' => $apartment->id,

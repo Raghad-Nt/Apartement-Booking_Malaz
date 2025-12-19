@@ -12,6 +12,10 @@ class UserResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
+
+
+
+    
     public function toArray($request)
     {
         return [
@@ -23,7 +27,7 @@ class UserResource extends JsonResource
             'status' => $this->status,
             'profile_image_url' => $this->profile_image ? asset('storage/' . $this->profile_image) : null,
             'created_at' => $this->created_at->format('Y-m-d'),
-            'updated_at' => $this->updated_at->format('Y-m-d')
+            'updated_at' => $this->updated_at->format('Y-m-d'),
         ];
     }
 }

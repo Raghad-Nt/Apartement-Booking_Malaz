@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 class MessageController extends BaseController
 {
     
-      //Send a message
+      
      
     public function send(SendMessageRequest $request)
     {
@@ -20,14 +20,14 @@ class MessageController extends BaseController
             $user = $request->user();
             $receiver = User::findOrFail($request->receiver_id);
 
-            // Create message
+            
             $message = $user->sentMessages()->create([
                 'receiver_id' => $request->receiver_id,
                 'message' => $request->message,
                 'is_read' => false
             ]);
 
-            // Load relationships
+            
             $message->load(['sender', 'receiver']);
 
             return $this->sendResponse(new MessageResource($message), 'messages.message_sent');
@@ -37,13 +37,13 @@ class MessageController extends BaseController
     }
 
     
-      //Get conversation between two users
+      
      
     public function conversation(Request $request, User $user)
     {
         $currentUser = $request->user();
 
-        // Get messages between the two users
+        
         $messages = Message::where(function ($query) use ($currentUser, $user) {
             $query->where('sender_id', $currentUser->id)
                 ->where('receiver_id', $user->id);
@@ -54,7 +54,7 @@ class MessageController extends BaseController
           ->orderBy('created_at', 'asc')
           ->paginate(20);
 
-        // Mark received messages as read
+        
         Message::where('sender_id', $user->id)
             ->where('receiver_id', $currentUser->id)
             ->where('is_read', false)
@@ -64,13 +64,13 @@ class MessageController extends BaseController
     }
 
     
-      //Get user's inbox (recent conversations)
+      
      
     public function inbox(Request $request)
     {
         $user = $request->user();
 
-        // Get distinct conversations
+        
         $conversations = Message::where(function ($query) use ($user) {
             $query->where('sender_id', $user->id)
                 ->orWhere('receiver_id', $user->id);
@@ -82,7 +82,7 @@ class MessageController extends BaseController
           ->take(20)
           ->values();
 
-        // Load relationships
+        
         $conversations->load(['sender', 'receiver']);
 
         return $this->sendResponse(MessageResource::collection($conversations), 'messages.inbox_retrieved');

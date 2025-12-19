@@ -56,4 +56,6 @@ return [
     'booking_update_failed' => 'Booking update failed',
     'review_save_failed' => 'Review save failed',
     'review_updated' => 'Review updated successfully',
+    'logout_success' => 'Logged out successfully',
+    'logout_failed' => 'Logout failed',
 ];

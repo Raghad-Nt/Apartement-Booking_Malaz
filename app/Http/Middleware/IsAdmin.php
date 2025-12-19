@@ -9,15 +9,14 @@ use Symfony\Component\HttpFoundation\Response;
 class IsAdmin
 {
     
-     // Handle an incoming request.
+     
      
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if user is authenticated and is admin
+        
         if (!$request->user() || !$request->user()->isAdmin()) {
             return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized, Admin access required.'
+             'message' => 'Unauthorized, Admin access required.'
             ], 403);
         }
 

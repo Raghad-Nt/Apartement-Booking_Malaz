@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 class AdminController extends BaseController
 {
     
-       //Get pending users for admin approval
+       
      
     public function pendingUsers(Request $request)
 {
@@ -24,25 +24,25 @@ class AdminController extends BaseController
 }
 
     
-     // Approve a user
+    
      
     public function approveUser(Request $request, User $user)
     {
-        // Check if user is already approved
+        
        if ($user->status === 'active') {
-            // استجابة خطأ 400 (Bad Request) لأن العميل يحاول إجراء غير صالح
-            return $this->sendError('user already approved', [], 400);
+            
+            return $this->sendError('user already approved', []);
         }
 
         try {
-            // تحديث حالة المستخدم إلى "نشط"
+           
             $user->update(['status' => 'active']);
 
-            // استجابة نجاح 200 (OK) مع بيانات المستخدم المحدثة ورسالة نجاح
+            
             return $this->sendResponse(new UserResource($user), 'user approved');
 
         } catch (Exception $e) {
-            // استجابة خطأ 500 (Internal Server Error) في حالة فشل عملية التحديث
+           
             return $this->sendError('user approval failed', ['error' => $e->getMessage()]);
         }
     }
@@ -50,18 +50,18 @@ class AdminController extends BaseController
     
 
     
-      //Reject a user
+      
      
     public function rejectUser(Request $request, User $user)
 {
-    // التحقق إذا كان الإجراء غير صالح (إذا كان المستخدم مرفوضًا أو نشطًا بالفعل)
+    
     if ($user->status === 'rejected' || $user->status === 'active') {
-        // استجابة خطأ 400 (Bad Request) لأن العميل يحاول إجراء غير صالح
-        return $this->sendError('invalid action', [], 400);
+       
+        return $this->sendError('invalid action', []);
     }
 
     try {
-        // حذف صور المستخدم من التخزين
+        
         if ($user->id_image) {
             Storage::disk('public')->delete($user->id_image);
         }
@@ -70,20 +70,18 @@ class AdminController extends BaseController
             Storage::disk('public')->delete($user->profile_image);
         }
 
-        // حذف المستخدم
+        
         $user->delete();
 
-        // استجابة نجاح 200 (OK) مع رسالة تأكيد
+        
         return $this->sendResponse([], 'user rejected');
 
     } catch (Exception $e) {
-        // استجابة خطأ 500 (Internal Server Error) في حالة فشل عملية الحذف
+        
         return $this->sendError('user rejection failed', ['error' => $e->getMessage()]);
     }
 }
     
-      // Get statistics for admin dashboard
-     
     public function statistics(Request $request)
     {
         try {
@@ -99,11 +97,11 @@ class AdminController extends BaseController
                 'total_revenue' => Booking::where('status', 'confirmed')->sum('total_price')
             ];
 
-            // استجابة نجاح 200 (OK) مع بيانات الإحصائيات ورسالة نجاح
+           
             return $this->sendResponse($stats, 'statistics retrieved');
 
         } catch (Exception $e) {
-            // استجابة خطأ 500 (Internal Server Error) في حالة فشل جلب الإحصائيات
+           
             return $this->sendError('statistics retrieval failed', ['error' => $e->getMessage()]);
         }
     }

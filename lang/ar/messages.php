@@ -56,4 +56,6 @@ return [
     'booking_update_failed' => 'فشل تحديث الحجز',
     'review_save_failed' => 'فشل حفظ التقييم',
     'review_updated' => 'تم تحديث التقييم بنجاح',
+    'logout_success' => 'تم تسجيل الخروج بنجاح',
+    'logout_failed' => 'فشل تسجيل الخروج',
 ];
