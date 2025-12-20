@@ -16,7 +16,8 @@ class DatabaseSeeder extends Seeder
     {
         
         User::factory()->create([
-            'name' => 'Admin User',
+            'first_name' => 'Admin',
+            'last_name' => 'Admin',
             'email' => 'admin@example.com',
             'mobile' => '0912345678',
             'role' => 'admin',
@@ -24,28 +25,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('admin password'),
         ]);
 
-       
-
-
-
-
-
-
-
-
-
         
-        // User::factory(5)->create([
-        //     'role' => 'renter',
-        //     'status' => 'active'
-        // ]);
-
-
-
-
-
-
-
+        
         
         $this->call(ApartmentsTableSeeder::class);
     }

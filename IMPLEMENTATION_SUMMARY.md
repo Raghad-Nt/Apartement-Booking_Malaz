@@ -105,8 +105,10 @@ This document summarizes the implementation of a comprehensive apartment booking
 - Revenue tracking
 
 #### Wallet Management
-- Deposit money to tenant wallets
-- Withdraw money from renter wallets
+- Admin deposits money to tenant wallets (no admin wallet required)
+- Tenants and renters have wallets
+- Automatic payment processing on booking confirmation
+- Payment deducts from tenant wallet and adds to renter wallet
 - View wallet balances
 - Renter withdrawal requests
 - Admin approval of withdrawal requests
@@ -193,7 +195,6 @@ This document summarizes the implementation of a comprehensive apartment booking
 ### Wallet Endpoints
 - GET /api/wallet/balance/{user_id}
 - POST /api/admin/wallet/deposit/{user_id}
-- POST /api/admin/wallet/withdraw/{user_id}
 - POST /api/wallet/withdrawal-request
 - GET /api/admin/wallet/withdrawal-requests
 - POST /api/admin/wallet/withdrawal-requests/{request_id}/approve

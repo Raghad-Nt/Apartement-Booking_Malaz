@@ -7,9 +7,11 @@ use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Models\Apartment;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends BaseController
 {
@@ -94,15 +96,62 @@ class BookingController extends BaseController
         // Check admin or owner permissions
         if (!$user->isAdmin() && $user->id !== $booking->apartment->owner_id) {
             return $this->sendError('unauthorized');
-                  }
+        }
 
         $request->validate([
             'status' => 'required|in:confirmed,rejected,cancelled'
         ]);
 
         try {
-            // Update booking status
-            $booking->update(['status' => $request->status]);
+            // If confirming the booking, process payment automatically
+            if ($request->status === 'confirmed' && $booking->status === 'pending') {
+                DB::beginTransaction();
+                
+                try {
+                    // Get tenant (booking user) wallet
+                    $tenant = $booking->user;
+                    $tenantWallet = $tenant->wallet;
+                    
+                    if (!$tenantWallet) {
+                        DB::rollBack();
+                        return $this->sendError('Tenant does not have a wallet');
+                    }
+
+                    // Check if tenant has sufficient balance
+                    if ($tenantWallet->balance < $booking->total_price) {
+                        DB::rollBack();
+                        return $this->sendError('Insufficient balance in tenant wallet. Balance: ' . $tenantWallet->balance . ', Required: ' . $booking->total_price);
+                    }
+
+                    // Get renter (apartment owner) wallet or create one
+                    $renter = $booking->apartment->owner;
+                    $renterWallet = $renter->wallet;
+                    
+                    if (!$renterWallet) {
+                        $renterWallet = new Wallet(['user_id' => $renter->id, 'balance' => 0]);
+                        $renter->wallet()->save($renterWallet);
+                    }
+
+                    // Deduct from tenant wallet
+                    $tenantWallet->balance -= $booking->total_price;
+                    $tenantWallet->save();
+
+                    // Add to renter wallet
+                    $renterWallet->balance += $booking->total_price;
+                    $renterWallet->save();
+
+                    // Update booking status
+                    $booking->update(['status' => $request->status]);
+                    
+                    DB::commit();
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    return $this->sendError('Payment processing failed', ['error' => $e->getMessage()]);
+                }
+            } else {
+                // For other status updates (rejected, cancelled), just update status
+                $booking->update(['status' => $request->status]);
+            }
 
             // Load relationships
             $booking->load(['user', 'apartment']);

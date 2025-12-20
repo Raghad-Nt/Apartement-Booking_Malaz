@@ -165,6 +165,15 @@ PUT /bookings/{id}
 Fields:
 - status (required, confirmed|rejected|cancelled)
 
+Automatic Payment Processing:
+- When status changes to "confirmed", the system automatically:
+  1. Checks tenant wallet balance
+  2. Deducts booking amount from tenant wallet
+  3. Adds booking amount to renter (apartment owner) wallet
+  4. Creates renter wallet if it doesn't exist
+- If tenant has insufficient balance, the confirmation will fail
+- Payment processing uses database transactions for data integrity
+
 #### Cancel Booking (Booking user only)
 ```
 POST /bookings/{id}/cancel
@@ -261,12 +270,7 @@ POST /admin/wallet/deposit/{user_id}
 Fields:
 - amount (required, numeric, minimum 0.01)
 
-#### Withdraw from Renter Wallet (Admin only)
-```
-POST /admin/wallet/withdraw/{user_id}
-```
-Fields:
-- amount (required, numeric, minimum 0.01)
+Note: Admin can deposit money to tenant wallets without needing their own wallet.
 
 #### Request Withdrawal (Renter only)
 ```

@@ -29,7 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // Wallet Management Routes (Admin only)
         Route::post('/admin/wallet/deposit/{user}', [WalletController::class, 'deposit']); // Deposit money to tenant wallet
-        Route::post('/admin/wallet/withdraw/{user}', [WalletController::class, 'withdraw']); // Withdraw money from renter wallet
         Route::get('/admin/wallet/withdrawal-requests', [WalletController::class, 'listWithdrawalRequests']); // List withdrawal requests
         Route::post('/admin/wallet/withdrawal-requests/{request}/approve', [WalletController::class, 'approveWithdrawal']); // Approve withdrawal request
         Route::post('/admin/wallet/withdrawal-requests/{request}/reject', [WalletController::class, 'rejectWithdrawal']); // Reject withdrawal request

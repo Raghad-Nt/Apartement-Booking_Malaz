@@ -54,53 +54,7 @@ class WalletController extends BaseController
         }
     }
 
-    /**
-     * Withdraw money from a renter's wallet (admin initiated).
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $userId
-     * @return \Illuminate\Http\Response
-     */
-    public function withdraw(Request $request, $userId)
-    {
-        try {
-            // Validate request
-            $request->validate([
-                'amount' => 'required|numeric|min:0.01'
-            ]);
 
-            // Find user
-            $user = User::findOrFail($userId);
-
-            // Ensure user is a renter
-            if (!$user->isRenter()) {
-                return $this->sendError('Only renters can have wallet withdrawals');
-            }
-
-            // Get wallet
-            $wallet = $user->wallet;
-            if (!$wallet) {
-                $wallet = new Wallet(['user_id' => $user->id, 'balance' => 0]);
-                $user->wallet()->save($wallet);
-            }
-
-            // Check if sufficient balance
-            if ($wallet->balance < $request->amount) {
-                return $this->sendError('Insufficient balance');
-            }
-
-            // Update balance
-            $wallet->balance -= $request->amount;
-            $wallet->save();
-
-            return $this->sendResponse([
-                'user_id' => $user->id,
-                'new_balance' => $wallet->balance
-            ], 'Withdrawal successful');
-        } catch (Exception $e) {
-            return $this->sendError('Withdrawal failed', ['error' => $e->getMessage()]);
-        }
-    }
 
     /**
      * Request withdrawal from a renter's wallet.
