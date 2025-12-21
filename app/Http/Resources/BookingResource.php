@@ -21,7 +21,7 @@ class BookingResource extends JsonResource
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'status' => $this->status,
-            'total_price' => $this->total_price,
+            'total_price' => '$' . number_format($this->total_price, 2),
             'user' => new UserResource($this->whenLoaded('user')),
             'apartment' => new ApartmentResource($this->whenLoaded('apartment')),
             'created_at' => $this->created_at,

@@ -18,7 +18,7 @@ class ApartmentResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
-            'price' => $this->price,
+            'price' => '$' . number_format($this->price, 2),
             'province' => $this->province,
             'city' => $this->city,
             'features' => $this->features,

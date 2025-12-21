@@ -8,6 +8,7 @@ use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Models\Apartment;
 use App\Models\Wallet;
+use App\Notifications\BookingStatusChanged;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Exception;
@@ -130,7 +131,7 @@ class BookingController extends BaseController
                     // Check if tenant has sufficient balance
                     if ($tenantWallet->balance < $booking->total_price) {
                         DB::rollBack();
-                        return $this->sendError('Insufficient balance in tenant wallet. Balance: ' . $tenantWallet->balance . ', Required: ' . $booking->total_price);
+                        return $this->sendError('Insufficient balance in tenant wallet. Balance: $' . number_format($tenantWallet->balance, 2) . ', Required: $' . number_format($booking->total_price, 2));
                     }
 
                     // Get renter (apartment owner) wallet or create one
@@ -152,7 +153,10 @@ class BookingController extends BaseController
 
                     // Update booking status
                     $booking->update(['status' => $request->status]);
-                    
+                                
+                    // Send notification to the booking user
+                    $booking->user->notify(new BookingStatusChanged($booking, $request->status));
+                                
                     DB::commit();
                 } catch (Exception $e) {
                     DB::rollBack();
@@ -161,6 +165,9 @@ class BookingController extends BaseController
             } else {
                 // For other status updates (rejected, cancelled), just update status
                 $booking->update(['status' => $request->status]);
+                
+                // Send notification to the booking user
+                $booking->user->notify(new BookingStatusChanged($booking, $request->status));
             }
 
             // Load relationships
@@ -190,6 +197,9 @@ class BookingController extends BaseController
         try {
             // Update status to cancelled
             $booking->update(['status' => 'cancelled']);
+            
+            // Send notification to the booking user
+            $booking->user->notify(new BookingStatusChanged($booking, 'cancelled'));
 
             // Load relationships
             $booking->load(['user', 'apartment']);

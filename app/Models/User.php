@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Wallet;
+use App\Models\Notification;
 
 class User extends Authenticatable
 {
@@ -165,9 +166,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(Wallet::class);
     }
-
-    
-      
+        
+    /**
+     * Get the notifications for the user.
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
      
 
 }

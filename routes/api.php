@@ -8,6 +8,7 @@ use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\MessageController;
 use App\Http\Controllers\API\AdminController;
 use App\Http\Controllers\API\WalletController;
+use App\Http\Controllers\API\NotificationController;
 
 // Authentication Routes
 Route::post('/register', [RegisterController::class, 'register']); // Register new user
@@ -68,4 +69,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/messages/send', [MessageController::class, 'send']); // Send message to user
     Route::get('/messages/inbox', [MessageController::class, 'inbox']); // Get user's message inbox
     Route::get('/messages/conversation/{user}', [MessageController::class, 'conversation']); // Get conversation with specific user
+    
+    // Notification Routes
+    Route::get('/notifications', [NotificationController::class, 'index']); // Get user's notifications
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']); // Mark notification as read
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']); // Mark all notifications as read
 });
