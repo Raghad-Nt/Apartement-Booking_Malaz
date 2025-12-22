@@ -122,7 +122,7 @@ class ApartmentController extends BaseController
             'city' => 'sometimes|string|max:100',
             'features' => 'nullable|array',
             'status' => 'sometimes|in:available,booked,maintenance'
-        ]));
+        ]);
 
         try {
             // Update apartment with provided fields

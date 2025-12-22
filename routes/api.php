@@ -6,7 +6,6 @@ use App\Http\Controllers\API\ApartmentController;
 use App\Http\Controllers\API\BookingController;
 use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\MessageController;
-use App\Http\Controllers\API\AdminController;
 use App\Http\Controllers\API\WalletController;
 use App\Http\Controllers\API\NotificationController;
 
@@ -23,13 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin Routes (Require Admin Role)
     Route::middleware('admin')->group(function () {
-        Route::get('/admin/users/pending', [AdminController::class, 'pendingUsers']); // Get users awaiting approval
-        Route::post('/admin/users/{user}/approve', [AdminController::class, 'approveUser']); // Approve pending user
-        Route::post('/admin/users/{user}/reject', [AdminController::class, 'rejectUser']); // Reject and delete pending user
-        Route::get('/admin/statistics', [AdminController::class, 'statistics']); // Get admin dashboard statistics
-        
-        // Wallet Management Routes (Admin only)
-        Route::post('/admin/wallet/deposit/{user}', [WalletController::class, 'deposit']); // Deposit money to tenant wallet
+        // No wallet management routes here as they're now handled in the Blade admin interface
     });
     
     // Wallet Routes (Accessible to all authenticated users)

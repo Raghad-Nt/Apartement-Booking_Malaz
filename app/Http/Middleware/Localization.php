@@ -21,11 +21,16 @@ class Localization
         }
         // Check if locale is set in header
         elseif ($request->hasHeader('Accept-Language')) {
-            $locale = $request->header('Accept-Language');
+            $acceptLanguage = $request->header('Accept-Language');
+            // Extract the primary language from Accept-Language header like 'en-US,en;q=0.9'
+            // Split by comma and take the first part, then extract the language code
+            $locales = explode(',', $acceptLanguage);
+            $primaryLocale = trim(substr($locales[0], 0, 2)); // Get first 2 characters like 'en' from 'en-US'
+            
             // Validate locale
-            if (in_array($locale, ['en', 'ar'])) {
-                App::setLocale($locale);
-                Session::put('locale', $locale);
+            if (in_array($primaryLocale, ['en', 'ar'])) {
+                App::setLocale($primaryLocale);
+                Session::put('locale', $primaryLocale);
             }
         }
 
