@@ -25,10 +25,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('bookings', function (Blueprint $table) {
-            // Drop indexes
-            $table->dropIndex(['apartment_id', 'status']);
-            $table->dropIndex(['start_date']);
-            $table->dropIndex(['end_date']);
+            // Drop non-FK indexes only
+            $table->dropIndex(['start_date']); // bookings_start_date_index
+            $table->dropIndex(['end_date']);   // bookings_end_date_index
+            
+            // NOTE: We don't drop the ['apartment_id', 'status'] index
+            // because it's automatically created by the foreign key constraint
+            // and will be removed when the table is dropped
         });
     }
 };

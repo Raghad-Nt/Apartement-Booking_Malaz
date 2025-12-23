@@ -23,7 +23,9 @@ class SendMessageRequest extends FormRequest
     {
         return [
             'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string|max:1000'
+            'message' => 'required|string|max:1000',
+            'apartment_id' => 'nullable|exists:apartments,id',
+            'booking_id' => 'nullable|exists:bookings,id'
         ];
     }
 
@@ -38,7 +40,9 @@ class SendMessageRequest extends FormRequest
             'receiver_id.required' => 'Receiver is required',
             'receiver_id.exists' => 'Selected receiver does not exist',
             'message.required' => 'Message is required',
-            'message.max' => 'Message may not be greater than 1000 characters'
+            'message.max' => 'Message may not be greater than 1000 characters',
+            'apartment_id.exists' => 'Selected apartment does not exist',
+            'booking_id.exists' => 'Selected booking does not exist'
         ];
     }
 }

@@ -2,9 +2,9 @@
   
 namespace App\Http\Controllers\API;
   
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller as Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\App;
@@ -22,9 +22,9 @@ class BaseController extends Controller
             'message' => __($message),
             'data'    => $result,
            
-        ];
-  
-        return response()->json($response, 200);
+        ];  
+          
+        return new JsonResponse($response, 200);
     }
   
    /**
@@ -43,7 +43,7 @@ class BaseController extends Controller
             $response['data'] = $errorMessages;
         }
   
-        return response()->json($response, 404);
+        return new JsonResponse($response, 404);
     }
 
       
@@ -52,6 +52,7 @@ class BaseController extends Controller
     public function sendPaginatedResponse($paginator, $message = ''): JsonResponse
     {
         $response = [
+
             
             'data' => $paginator->items(),
             'message' => __($message),
@@ -65,6 +66,6 @@ class BaseController extends Controller
             ]
         ];
 
-        return response()->json($response, 200);
+        return new JsonResponse($response, 200);
     }
 }

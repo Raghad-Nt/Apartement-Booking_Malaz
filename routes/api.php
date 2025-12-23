@@ -8,6 +8,7 @@ use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\MessageController;
 use App\Http\Controllers\API\WalletController;
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\AdminController;
 
 // Authentication Routes
 Route::post('/register', [RegisterController::class, 'register']); // Register new user
@@ -22,7 +23,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin Routes (Require Admin Role)
     Route::middleware('admin')->group(function () {
-        // No wallet management routes here as they're now handled in the Blade admin interface
+        // Admin Dashboard Routes
+        Route::get('/admin/dashboard', [AdminController::class, 'index']); // Get admin dashboard statistics
+        
+        // Admin User Management Routes
+        Route::get('/admin/users', [AdminController::class, 'users']); // Get all users
+        Route::get('/admin/users/pending', [AdminController::class, 'pendingUsers']); // Get pending users
+        Route::post('/admin/users/{user}/approve', [AdminController::class, 'approveUser']); // Approve user
+        Route::post('/admin/users/{user}/reject', [AdminController::class, 'rejectUser']); // Reject user
+        
+        // Admin Wallet Management Routes
+        Route::post('/admin/wallet/deposit/{user}', [AdminController::class, 'deposit']); // Deposit to user wallet
     });
     
     // Wallet Routes (Accessible to all authenticated users)
@@ -62,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/messages/send', [MessageController::class, 'send']); // Send message to user
     Route::get('/messages/inbox', [MessageController::class, 'inbox']); // Get user's message inbox
     Route::get('/messages/conversation/{user}', [MessageController::class, 'conversation']); // Get conversation with specific user
+    Route::get('/messages/apartment/{apartment}', [MessageController::class, 'apartmentMessages']); // Get messages related to specific apartment
     
     // Notification Routes
     Route::get('/notifications', [NotificationController::class, 'index']); // Get user's notifications

@@ -18,7 +18,9 @@ class Message extends Model
         'sender_id',
         'receiver_id',
         'message',
-        'is_read'
+        'is_read',
+        'apartment_id',
+        'booking_id'
     ];
 
     /**
@@ -39,10 +41,27 @@ class Message extends Model
     }
 
     
+    
       //Get the receiver of the message
      
     public function receiver()
     {
         return $this->belongsTo(User::class, 'receiver_id');
+    }
+
+    
+      //Get the apartment associated with the message
+     
+    public function apartment()
+    {
+        return $this->belongsTo(Apartment::class);
+    }
+
+    
+      //Get the booking associated with the message
+     
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class);
     }
 }

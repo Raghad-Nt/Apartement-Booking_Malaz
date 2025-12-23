@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\API\BaseController as APIController;
 use App\Models\User;
 use App\Models\Apartment;
 use App\Models\Booking;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
+use Exception;
 
-class AdminController extends Controller
+class AdminController extends APIController
 {
     /**
      * Create a new controller instance.
@@ -25,9 +28,9 @@ class AdminController extends Controller
     /**
      * Show the admin dashboard.
      *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * @return JsonResponse
      */
-    public function index()
+    public function index(): JsonResponse
     {
         $stats = [
             'total_users' => User::count(),
@@ -41,29 +44,29 @@ class AdminController extends Controller
             'total_revenue' => Booking::where('status', 'confirmed')->sum('total_price')
         ];
 
-        return view('admin.dashboard', compact('stats'));
+        return $this->sendResponse($stats, 'admin dashboard statistics retrieved');
     }
 
     /**
      * Display a listing of pending users.
      *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * @return JsonResponse
      */
-    public function pendingUsers()
+    public function pendingUsers(): JsonResponse
     {
         $users = User::where('status', 'pending')->paginate(20);
-        return view('admin.users.pending', compact('users'));
+        return $this->sendPaginatedResponse($users, 'pending users retrieved');
     }
 
     /**
      * Display a listing of all users.
      *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * @return JsonResponse
      */
-    public function users()
+    public function users(): JsonResponse
     {
         $users = User::paginate(20);
-        return view('admin.users.index', compact('users'));
+        return $this->sendPaginatedResponse($users, 'users retrieved');
     }
 
     /**
@@ -71,23 +74,26 @@ class AdminController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\RedirectResponse
+     * @return JsonResponse
      */
-    public function approveUser(Request $request, User $user)
+    public function approveUser(Request $request, User $user): JsonResponse
     {
         // Check if user is already approved
         if ($user->status === 'active') {
-            return redirect()->back()->with('error', 'User already approved.');
+            return $this->sendError('User already approved.');
         }
 
         try {
             // Update user status to "active"
             $user->update(['status' => 'active']);
             
-            return redirect()->back()->with('success', 'User approved successfully.');
+            return $this->sendResponse([
+                'user' => $user,
+                'message' => 'User approved successfully.'
+            ]);
 
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'User approval failed: ' . $e->getMessage());
+        } catch (Exception $e) {
+            return $this->sendError('User approval failed: ' . $e->getMessage());
         }
     }
 
@@ -96,13 +102,13 @@ class AdminController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\RedirectResponse
+     * @return JsonResponse
      */
-    public function rejectUser(Request $request, User $user)
+    public function rejectUser(Request $request, User $user): JsonResponse
     {
         // Check if action is invalid (if user is already rejected or active)
         if ($user->status === 'rejected' || $user->status === 'active') {
-            return redirect()->back()->with('error', 'Invalid action.');
+            return $this->sendError('Invalid action.');
         }
 
         try {
@@ -118,22 +124,11 @@ class AdminController extends Controller
             // Delete user
             $user->delete();
 
-            return redirect()->back()->with('success', 'User rejected successfully.');
+            return $this->sendResponse([], 'User rejected successfully.');
 
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'User rejection failed: ' . $e->getMessage());
+        } catch (Exception $e) {
+            return $this->sendError('User rejection failed: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Show the deposit form for a user
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
-    public function showDepositForm(User $user)
-    {
-        return view('admin.wallets.deposit', compact('user'));
     }
 
     /**
@@ -141,9 +136,9 @@ class AdminController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\RedirectResponse
+     * @return JsonResponse
      */
-    public function deposit(Request $request, User $user)
+    public function deposit(Request $request, User $user): JsonResponse
     {
         $request->validate([
             'amount' => 'required|numeric|min:0.01'
@@ -152,7 +147,7 @@ class AdminController extends Controller
         try {
             // Ensure user is a tenant
             if (!$user->isTenant()) {
-                return redirect()->back()->with('error', 'Only tenants can have wallet deposits');
+                return $this->sendError('Only tenants can have wallet deposits');
             }
             
             // Create wallet if it doesn't exist
@@ -163,13 +158,18 @@ class AdminController extends Controller
             }
 
             // Update balance
-            $wallet->balance += $request->amount;
+            $wallet->balance = ($wallet->balance ?? 0) + $request->amount;
             $wallet->save();
 
-            return redirect()->back()->with('success', 'Deposit successful. New balance: $' . number_format($wallet->balance, 2));
+            return $this->sendResponse([
+                'wallet' => $wallet,
+                'message' => 'Deposit successful. New balance: $' . number_format($wallet->balance ?? 0, 2)
+            ], 'Deposit successful.');
 
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Deposit failed: ' . $e->getMessage());
+        } catch (Exception $e) {
+            return $this->sendError('Deposit failed: ' . $e->getMessage());
         }
     }
+
+
 }

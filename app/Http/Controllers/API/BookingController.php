@@ -50,7 +50,7 @@ class BookingController extends BaseController
     {
         // Only tenants can book apartments
         if (!$request->user()->isTenant()) {
-            return $this->sendError('Only tenants can book apartments', [], 403);
+            return $this->sendError('Only tenants can book apartments', []);
         }
 
         try {
@@ -59,7 +59,7 @@ class BookingController extends BaseController
 
             // Prevent tenants from booking their own apartments
             if ($apartment->owner_id === $user->id) {
-                return $this->sendError('You cannot book your own apartment', [], 403);
+                return $this->sendError('You cannot book your own apartment', []);
             }
 
             // Calculate total price based on days
@@ -131,7 +131,7 @@ class BookingController extends BaseController
                     // Check if tenant has sufficient balance
                     if ($tenantWallet->balance < $booking->total_price) {
                         DB::rollBack();
-                        return $this->sendError('Insufficient balance in tenant wallet. Balance: $' . number_format($tenantWallet->balance, 2) . ', Required: $' . number_format($booking->total_price, 2));
+                        return $this->sendError('Insufficient balance in tenant wallet. Balance: $' . number_format($tenantWallet->balance ?? 0, 2) . ', Required: $' . number_format($booking->total_price ?? 0, 2));
                     }
 
                     // Get renter (apartment owner) wallet or create one
@@ -144,11 +144,11 @@ class BookingController extends BaseController
                     }
 
                     // Deduct from tenant wallet
-                    $tenantWallet->balance -= $booking->total_price;
+                    $tenantWallet->balance = ($tenantWallet->balance ?? 0) - $booking->total_price;
                     $tenantWallet->save();
 
                     // Add to renter wallet
-                    $renterWallet->balance += $booking->total_price;
+                    $renterWallet->balance = ($renterWallet->balance ?? 0) + $booking->total_price;
                     $renterWallet->save();
 
                     // Update booking status
