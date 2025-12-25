@@ -32,9 +32,9 @@ class AdminController extends BaseController
     public function index(): JsonResponse
     {
         $stats = [
-            'total_users' => User::count(),
+            'total_users' => User::count()-1,
             'pending_users' => User::where('status', 'pending')->count(),
-            'active_users' => User::where('status', 'active')->count(),
+            'active_users' => User::where('status', 'active')->count()-1,
             'total_apartments' => Apartment::count(),
             'available_apartments' => Apartment::where('status', 'available')->count(),
             'total_bookings' => Booking::count(),
@@ -43,7 +43,7 @@ class AdminController extends BaseController
             'total_revenue' => Booking::where('status', 'confirmed')->sum('total_price')
         ];
 
-        return $this->sendResponse($stats, 'admin dashboard statistics retrieved');
+        return $this->sendResponse($stats, 'admin dashboard statistics');
     }
 
     /**
@@ -147,7 +147,12 @@ class AdminController extends BaseController
             if (!$user->isTenant()) {
                 return $this->sendError('Only tenants can have wallet deposits');
             }
-            
+                    
+            // Check if the tenant's account is active
+            if (!$user->isActive()) {
+                return $this->sendError('Tenant account must be active to receive deposits');
+            }
+                    
             // Create wallet if it doesn't exist
             $wallet = $user->wallet;
             if (!$wallet) {
@@ -161,7 +166,7 @@ class AdminController extends BaseController
 
             return $this->sendResponse([
                 'wallet' => $wallet,
-                'message' => 'Deposit successful. New balance: $' . number_format($wallet->balance ?? 0, 2)
+                'message' => 'Your balance now is: $' . number_format($wallet->balance ?? 0, 2)
             ], 'Deposit successful.');
 
         } catch (Exception $e) {
