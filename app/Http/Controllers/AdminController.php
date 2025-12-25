@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\JsonResponse;
 use Exception;
 
-class AdminController extends APIController
+class AdminController extends Controller
 {
     /**
      * Create a new controller instance.
@@ -88,8 +88,8 @@ class AdminController extends APIController
             $user->update(['status' => 'active']);
             
             return $this->sendResponse([
+                'message' => 'User approved successfully.',
                 'user' => $user,
-                'message' => 'User approved successfully.'
             ]);
 
         } catch (Exception $e) {
@@ -158,7 +158,7 @@ class AdminController extends APIController
             }
 
             // Update balance
-            $wallet->balance = ($wallet->balance ?? 0) + $request->amount;
+            $wallet->balance = (float)(($wallet->balance ?? 0) + $request->amount);
             $wallet->save();
 
             return $this->sendResponse([

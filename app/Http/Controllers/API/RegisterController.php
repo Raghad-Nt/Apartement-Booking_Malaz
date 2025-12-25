@@ -15,14 +15,13 @@ use Illuminate\Http\JsonResponse;
 
 
 
-
 class RegisterController extends BaseController
 {
     
     /**
      * Register api
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -71,7 +70,7 @@ class RegisterController extends BaseController
     /**
      * Login api
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request): JsonResponse
     {

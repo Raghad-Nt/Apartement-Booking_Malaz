@@ -66,7 +66,7 @@ class BookingController extends BaseController
             $startDate = Carbon::parse($request->start_date);
             $endDate = Carbon::parse($request->end_date);
             $days = $startDate->diffInDays($endDate);
-            $totalPrice = $days * $apartment->price;
+            $totalPrice = (float)($days * $apartment->price);
 
             // Create booking with pending status
             $booking = $user->bookings()->create([
@@ -129,7 +129,7 @@ class BookingController extends BaseController
                     }
 
                     // Check if tenant has sufficient balance
-                    if ($tenantWallet->balance < $booking->total_price) {
+                    if ((float)($tenantWallet->balance ?? 0) < (float)($booking->total_price ?? 0)) {
                         DB::rollBack();
                         return $this->sendError('Insufficient balance in tenant wallet. Balance: $' . number_format($tenantWallet->balance ?? 0, 2) . ', Required: $' . number_format($booking->total_price ?? 0, 2));
                     }
@@ -144,11 +144,11 @@ class BookingController extends BaseController
                     }
 
                     // Deduct from tenant wallet
-                    $tenantWallet->balance = ($tenantWallet->balance ?? 0) - $booking->total_price;
+                    $tenantWallet->balance = (float)(($tenantWallet->balance ?? 0) - $booking->total_price);
                     $tenantWallet->save();
 
                     // Add to renter wallet
-                    $renterWallet->balance = ($renterWallet->balance ?? 0) + $booking->total_price;
+                    $renterWallet->balance = (float)(($renterWallet->balance ?? 0) + $booking->total_price);
                     $renterWallet->save();
 
                     // Update booking status
@@ -215,7 +215,7 @@ class BookingController extends BaseController
      *
      * @param  \App\Http\Requests\UpdateBookingRequest  $request
      * @param  \App\Models\Booking  $booking
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function updateDetails(UpdateBookingRequest $request, Booking $booking)
     {
@@ -236,7 +236,7 @@ class BookingController extends BaseController
                 $startDate = $request->has('start_date') ? Carbon::parse($request->start_date) : $booking->start_date;
                 $endDate = $request->has('end_date') ? Carbon::parse($request->end_date) : $booking->end_date;
                 $days = $startDate->diffInDays($endDate);
-                $totalPrice = $days * $booking->apartment->price;
+                $totalPrice = (float)($days * $booking->apartment->price);
             }
 
             // Update booking with provided fields

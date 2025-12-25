@@ -16,7 +16,7 @@ class WalletController extends BaseController
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $userId
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function deposit(Request $request, $userId)
     {
@@ -59,7 +59,7 @@ class WalletController extends BaseController
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $userId
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function balance(Request $request, $userId)
     {
