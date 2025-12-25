@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\API\BaseController as APIController;
 use App\Models\User;
 use App\Models\Apartment;
 use App\Models\Booking;
@@ -12,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\JsonResponse;
 use Exception;
 
-class AdminController extends Controller
+class AdminController extends BaseController
 {
     /**
      * Create a new controller instance.
@@ -88,9 +87,8 @@ class AdminController extends Controller
             $user->update(['status' => 'active']);
             
             return $this->sendResponse([
-                'message' => 'User approved successfully.',
                 'user' => $user,
-            ]);
+            ], 'User approved successfully.');
 
         } catch (Exception $e) {
             return $this->sendError('User approval failed: ' . $e->getMessage());
@@ -170,6 +168,4 @@ class AdminController extends Controller
             return $this->sendError('Deposit failed: ' . $e->getMessage());
         }
     }
-
-
 }

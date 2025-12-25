@@ -8,7 +8,7 @@ use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\MessageController;
 use App\Http\Controllers\API\WalletController;
 use App\Http\Controllers\API\NotificationController;
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\API\AdminController;
 
 // Authentication Routes
 Route::post('/register', [RegisterController::class, 'register']); // Register new user
@@ -61,7 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/bookings/{booking}/details', [BookingController::class, 'updateDetails']); // Update booking details (user)
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']); // Cancel booking (user)
     Route::get('/my-bookings', [BookingController::class, 'myBookings']); // List current user's bookings
-    
+        
     // Review Routes
     Route::post('/reviews', [ReviewController::class, 'store']); // Create/update review
     Route::get('/reviews', [ReviewController::class, 'index']); // List all reviews (with filters)

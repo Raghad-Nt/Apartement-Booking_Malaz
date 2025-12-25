@@ -25,7 +25,7 @@ class Wallet extends Model
      * @var array
      */
     protected $casts = [
-        'balance' => 'decimal:2'
+        'balance' => 'string'
     ];
 
     /**

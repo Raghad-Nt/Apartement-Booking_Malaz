@@ -21,7 +21,7 @@ class RegisterController extends BaseController
     /**
      * Register api
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\Response
      */
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -70,7 +70,7 @@ class RegisterController extends BaseController
     /**
      * Login api
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\Response
      */
     public function login(Request $request): JsonResponse
     {
