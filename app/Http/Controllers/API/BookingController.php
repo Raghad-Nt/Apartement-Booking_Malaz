@@ -155,7 +155,7 @@ class BookingController extends BaseController
                         return $this->sendError('Insufficient balance in tenant wallet. Balance: $' . number_format($tenantWallet->balance ?? 0, 2) . ', Required: $' . number_format($booking->total_price ?? 0, 2));
                     }
 
-                    // Get renter (apartment owner) wallet or create one
+                    // Get owner (apartment owner) wallet or create one
                     $renter = $booking->apartment->owner;
                     $renterWallet = $renter->wallet;
                     
@@ -194,7 +194,7 @@ class BookingController extends BaseController
             }
             // Handle modification rejection
             elseif ($request->status === 'modification_rejected' && $booking->status === 'pending_modification') {
-                // Revert to original booking dates and price, keep status as confirmed
+                // Revert to original booking details, keep status as confirmed
                 $booking->update(['status' => 'confirmed']);
                 
                 // Send notification to the booking user
@@ -308,16 +308,21 @@ class BookingController extends BaseController
             }
 
             // If the booking was confirmed, change status to 'pending_modification' until owner approves
-            $newStatus = $booking->status;
             if ($booking->status === 'confirmed') {
                 $newStatus = 'pending_modification';
+                
+                // Update booking with provided fields
+                $booking->update(array_merge(
+                    $request->only(['start_date', 'end_date']),
+                    ['total_price' => $totalPrice, 'status' => $newStatus]
+                ));
+            } else {
+                // For pending bookings, just update the details
+                $booking->update(array_merge(
+                    $request->only(['start_date', 'end_date']),
+                    ['total_price' => $totalPrice, 'status' => $booking->status]
+                ));
             }
-
-            // Update booking with provided fields
-            $booking->update(array_merge(
-                $request->only(['start_date', 'end_date']),
-                ['total_price' => $totalPrice, 'status' => $newStatus]
-            ));
 
             // Load relationships
             $booking->load(['user', 'apartment']);
@@ -326,48 +331,6 @@ class BookingController extends BaseController
             return $this->sendResponse(new BookingResource($booking), $message);
         } catch (Exception $e) {
             return $this->sendError('booking update failed', ['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Allow owner to approve modification requests from tenant
-     *
-     * @param  \App\Http\Requests\UpdateBookingRequest  $request
-     * @param  \App\Models\Booking  $booking
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function approveModification(Request $request, Booking $booking)
-    {
-        $user = $request->user();
-
-        // Check if user is the apartment owner or admin
-        if (!$user->isAdmin() && $user->id !== $booking->apartment->owner_id) {
-            return $this->sendError('unauthorized', ['error' => 'Only apartment owner can approve modifications']);
-        }
-
-        // Check if booking has already been cancelled - if so, cannot approve modifications
-        if ($booking->status === 'cancelled') {
-            return $this->sendError('Cannot approve modifications for a cancelled booking', ['error' => 'booking has been cancelled']);
-        }
-
-        // Check if booking is in pending_modification status
-        if ($booking->status !== 'pending_modification') {
-            return $this->sendError('Booking must be in pending modification status', ['error' => 'booking is not in pending modification status']);
-        }
-
-        try {
-            // Update status to confirmed since modification is approved
-            $booking->update(['status' => 'confirmed']);
-            
-            // Send notification to the booking user
-            $booking->user->notify(new BookingStatusChanged($booking, 'modification_approved'));
-
-            // Load relationships
-            $booking->load(['user', 'apartment']);
-
-            return $this->sendResponse(new BookingResource($booking), 'Modification approved and booking updated');
-        } catch (Exception $e) {
-            return $this->sendError('Modification approval failed', ['error' => $e->getMessage()]);
         }
     }
 

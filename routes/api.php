@@ -45,9 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings', [BookingController::class, 'store']); // Create new booking
     Route::get('/bookings', [BookingController::class, 'index']); // List all bookings (with filters)
     Route::get('/bookings/{booking}', [BookingController::class, 'show']); // Show specific booking
-    Route::put('/bookings/{booking}', [BookingController::class, 'update']); // Update booking status (owner/admin)
+    Route::put('/bookings/{booking}', [BookingController::class, 'update']); // Update booking status (owner/admin) - includes modification approval
     Route::put('/bookings/{booking}/details', [BookingController::class, 'updateDetails']); // Update booking details (user)
-    Route::put('/bookings/{booking}/approve-modification', [BookingController::class, 'approveModification']); // Approve booking modification (owner/admin)
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']); // Cancel booking (user)
     Route::get('/my-bookings', [BookingController::class, 'myBookings']); // List current user's bookings
         
