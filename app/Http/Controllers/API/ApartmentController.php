@@ -168,23 +168,49 @@ class ApartmentController extends BaseController
                 }
 
     
-      //Toggle favorite status for an apartment
+      //Add apartment to favorites
      
-    public function toggleFavorite(Request $request, Apartment $apartment)
+    public function addToFavorites(Request $request, Apartment $apartment)
     {
         $user = $request->user();
+        
+        // Check if user is tenant
+        if (!$user->isTenant()) {
+            return $this->sendError('Only tenants can add apartments to favorites');
+        }
         
         // Check if already favorited
         $favorite = $user->favorites()->where('apartment_id', $apartment->id)->first();
         
         if ($favorite) {
-            // Remove from favorites
-            $favorite->delete();
-            return $this->sendResponse([], 'favorite removed');
+            return $this->sendError('Apartment already added to favorites');
         } else {
             // Add to favorites
             $user->favorites()->create(['apartment_id' => $apartment->id]);
-            return $this->sendResponse([], 'favorite added');
+            return $this->sendResponse([], 'Apartment added to favorites');
+        }
+    }
+    
+      //Remove apartment from favorites
+     
+    public function removeFromFavorites(Request $request, Apartment $apartment)
+    {
+        $user = $request->user();
+        
+        // Check if user is tenant
+        if (!$user->isTenant()) {
+            return $this->sendError('Only tenants can remove apartments from favorites');
+        }
+        
+        // Check if already favorited
+        $favorite = $user->favorites()->where('apartment_id', $apartment->id)->first();
+        
+        if (!$favorite) {
+            return $this->sendError('Apartment already removed from favorites');
+        } else {
+            // Remove from favorites
+            $favorite->delete();
+            return $this->sendResponse([], 'Apartment removed from favorites');
         }
     }
 

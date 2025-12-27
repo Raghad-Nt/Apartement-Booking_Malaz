@@ -50,7 +50,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/apartments/{apartment}', [ApartmentController::class, 'destroy']); // Delete apartment
     
     // Favorite Apartment Routes
-    Route::post('/apartments/{apartment}/favorite', [ApartmentController::class, 'toggleFavorite']); // Add/remove apartment from favorites
+    Route::post('/apartments/{apartment}/favorite', [ApartmentController::class, 'addToFavorites']); // Add apartment to favorites
+    Route::delete('/apartments/{apartment}/favorite', [ApartmentController::class, 'removeFromFavorites']); // Remove apartment from favorites
     Route::get('/favorites', [ApartmentController::class, 'favorites']); // List user's favorite apartments
     
     // Booking Routes
