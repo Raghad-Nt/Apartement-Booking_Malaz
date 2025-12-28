@@ -19,7 +19,6 @@ class MessageResource extends JsonResource
             'sender_id' => $this->sender_id,
             'receiver_id' => $this->receiver_id,
             'message' => $this->message,
-            'is_read' => $this->is_read,
             'apartment_id' => $this->apartment_id,
             'booking_id' => $this->booking_id,
             'sender' => new UserResource($this->whenLoaded('sender')),

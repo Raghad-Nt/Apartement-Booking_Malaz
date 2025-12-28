@@ -49,7 +49,6 @@ class MessageController extends BaseController
             $message = $user->sentMessages()->create([
                 'receiver_id' => $request->receiver_id,
                 'message' => $request->message,
-                'is_read' => false,
                 'apartment_id' => $request->apartment_id,
                 'booking_id' => $request->booking_id
             ]);
@@ -118,28 +117,5 @@ class MessageController extends BaseController
     
     
      
-    public function apartmentMessages(Request $request, Apartment $apartment)
-    {
-        $user = $request->user();
-
-        // Check if user is authorized to view messages about this apartment
-        // User must be either the owner of the apartment or have booked it
-        if ($apartment->owner_id !== $user->id && !$apartment->bookings()->where('user_id', $user->id)->exists()) {
-            return $this->sendError('You are not authorized to view messages about this apartment');
-        }
-
-        // Get messages related to this apartment
-        $messages = Message::where('apartment_id', $apartment->id)
-            ->with(['sender', 'receiver', 'apartment', 'booking'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        // Mark received messages as read for this user
-        Message::where('apartment_id', $apartment->id)
-            ->where('receiver_id', $user->id)
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
-
-        return $this->sendPaginatedResponse($messages, 'messages.apartment_messages_retrieved');
-    }
+    
 }

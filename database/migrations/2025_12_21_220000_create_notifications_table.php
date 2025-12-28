@@ -18,7 +18,6 @@ return new class extends Migration
             $table->json('data');
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
-            
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->index(['user_id', 'read_at']);
         });

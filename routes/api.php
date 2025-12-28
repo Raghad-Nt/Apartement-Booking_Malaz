@@ -30,7 +30,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/apartments', [ApartmentController::class, 'index']); // List all apartments
     Route::get('/apartments/{apartment}', [ApartmentController::class, 'show']); // Show specific apartment
     Route::get('/apartments/{apartment}/reviews', [ReviewController::class, 'apartmentReviews']); // Get reviews for specific apartment
-    
 
     // Apartment Management Routes (Owner/Renter only)
     Route::post('/apartments', [ApartmentController::class, 'store']); // Create new apartment
@@ -59,10 +58,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/messages/send', [MessageController::class, 'send']); // Send message to user
     Route::get('/messages/inbox', [MessageController::class, 'inbox']); // Get user's message inbox
     Route::get('/messages/conversation/{user}', [MessageController::class, 'conversation']); // Get conversation with specific user
-    Route::get('/messages/apartment/{apartment}', [MessageController::class, 'apartmentMessages']); // Get messages related to specific apartment
     
     // Notification Routes
     Route::get('/notifications', [NotificationController::class, 'index']); // Get user's notifications
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']); // Mark notification as read
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']); // Mark all notifications as read
 });

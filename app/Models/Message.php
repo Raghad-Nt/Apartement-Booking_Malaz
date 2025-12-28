@@ -18,7 +18,7 @@ class Message extends Model
         'sender_id',
         'receiver_id',
         'message',
-        'is_read',
+      
         'apartment_id',
         'booking_id'
     ];
@@ -29,7 +29,7 @@ class Message extends Model
      * @var array
      */
     protected $casts = [
-        'is_read' => 'boolean'
+      
     ];
 
     

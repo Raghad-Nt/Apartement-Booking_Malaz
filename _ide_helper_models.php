@@ -130,7 +130,7 @@ namespace App\Models{
 /**
  * @property int $id
  * @property string $message
- * @property bool $is_read
+ * @property int $is_read
  * @property int $sender_id
  * @property int $receiver_id
  * @property \Illuminate\Support\Carbon|null $created_at

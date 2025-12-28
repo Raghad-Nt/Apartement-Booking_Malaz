@@ -37,15 +37,5 @@ class NotificationController extends BaseController
         return $this->sendResponse(new NotificationResource($notification), 'notification marked as read');
     }
 
-    /**
-     * Mark all notifications as read.
-     */
-    public function markAllAsRead(Request $request)
-    {
-        $user = $request->user();
-        
-        $user->notifications()->unread()->update(['read_at' => now()]);
-        
-        return $this->sendResponse([], 'all notifications marked as read');
-    }
+    
 }
