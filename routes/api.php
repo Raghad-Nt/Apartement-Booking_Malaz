@@ -40,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/apartments/{apartment}/favorite', [ApartmentController::class, 'addToFavorites']); // Add apartment to favorites
     Route::delete('/apartments/{apartment}/favorite', [ApartmentController::class, 'removeFromFavorites']); // Remove apartment from favorites
     Route::get('/favorites', [ApartmentController::class, 'favorites']); // List user's favorite apartments
+    Route::post('/favorites/{apartment}/book', [ApartmentController::class, 'bookFromFavorites']); // Book apartment from favorites list
     
     // Booking Routes
     Route::post('/bookings', [BookingController::class, 'store']); // Create new booking

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('city'); // For filtering by city
             $table->json('features')->nullable(); // Store features as JSON
             $table->foreignId('owner_id')->constrained('users')->cascadeOnDelete();
-            $table->enum('status', ['available', 'booked', 'maintenance'])->default('available');
+            $table->enum('status', ['available', 'booked'])->default('available');
             $table->timestamps();
         });
     }

@@ -8,6 +8,7 @@ use App\Http\Resources\ApartmentResource;
 use App\Models\Apartment;
 use App\Models\ApartmentImage;
 use App\Notifications\ApartmentActivity;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -232,5 +233,94 @@ class ApartmentController extends BaseController
         });
 
         return $this->sendPaginatedResponse($apartments, 'favorites retrieved');
+    }
+    
+    /**
+     * Book an apartment from the favorites list
+     */
+    public function bookFromFavorites(Request $request, Apartment $apartment)
+    {
+        $user = $request->user();
+        
+        // Check if user is tenant
+        if (!$user->isTenant()) {
+            return $this->sendError('Only tenants can book apartments from favorites');
+        }
+        
+        // Check if apartment is in user's favorites
+        $favorite = $user->favorites()->where('apartment_id', $apartment->id)->first();
+        
+        if (!$favorite) {
+            return $this->sendError('This apartment is not in your favorites list');
+        }
+        
+        // Validate booking request data
+        $request->validate([
+            'start_date' => 'required|date|after_or_equal:today',
+            'end_date' => 'required|date|after:start_date',
+        ]);
+        
+        // Check for overlapping bookings
+        $existingBooking = $apartment->bookings()
+            ->where('status', '!=', 'cancelled')
+            ->where(function($query) use ($request) {
+                $query->where(function($q) use ($request) {
+                        $q->where('start_date', '<=', $request->start_date)
+                          ->where('end_date', '>', $request->start_date);
+                    })
+                    ->orWhere(function($q) use ($request) {
+                        $q->where('start_date', '<', $request->end_date)
+                          ->where('end_date', '>=', $request->end_date);
+                    })
+                    ->orWhere(function($q) use ($request) {
+                        $q->where('start_date', '>=', $request->start_date)
+                          ->where('end_date', '<=', $request->end_date);
+                    });
+            })
+            ->first();
+        
+        if ($existingBooking) {
+            return $this->sendError('This apartment is already booked for the selected dates');
+        }
+        
+        try {
+            // Calculate total price based on days
+            $startDate = Carbon::parse($request->start_date);
+            $endDate = Carbon::parse($request->end_date);
+            $days = $startDate->diffInDays($endDate);
+            $totalPrice = (float)($days * $apartment->price);
+
+            // Check if tenant has a wallet
+            $tenantWallet = $user->wallet;
+            if (!$tenantWallet) {
+                return $this->sendError('You do not have money in your wallet.', []);
+            }
+
+            // Check if tenant has sufficient balance
+            $currentBalance = (float)($tenantWallet->balance ?? 0);
+            if ($currentBalance < $totalPrice) {
+                return $this->sendError("Insufficient balance in your wallet. Your balance: $" . number_format($currentBalance, 2) . ", Required: $" . number_format($totalPrice, 2), []);
+            }
+
+            // Create booking with pending status
+            $booking = $user->bookings()->create([
+                'apartment_id' => $apartment->id,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'status' => 'pending',
+                'total_price' => $totalPrice
+            ]);
+
+            // Send notification to tenant about the booking
+            $user->notify(new ApartmentActivity('booking', $apartment->id, $user->id));
+
+            // Load relationships
+            $booking->load(['user', 'apartment']);
+
+            return $this->sendResponse(new \App\Http\Resources\BookingResource($booking), 'booking created from favorites. Pending owner approval.');
+        } catch (Exception $e) {
+            // Handle creation errors
+            return $this->sendError('booking creation from favorites failed', ['error' => $e->getMessage()]);
+        }
     }
 }
