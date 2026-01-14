@@ -1,0 +1,18 @@
+[90m= [39m[34;4mApp\Models\User[39;24m {#6061
+    [34mid[39m: [35m3[39m,
+    [34mfirst_name[39m: "[32mRaghad[39m",
+    [34mlast_name[39m: "[32mAlnusaerat[39m",
+    [34mdate_of_birth[39m: "[32m2005-06-25[39m",
+    [34memail[39m: "[32mraghad@gmail.com[39m",
+    [34memail_verified_at[39m: [36mnull[39m,
+    #[33mpassword[39m: "[32m$2y$12$ugjd2xni1slsKBQ55IVz6.6Leosz0u5vnNvHct0PS2qhIugZyhWdm[39m",
+    #[33mremember_token[39m: [36mnull[39m,
+    [34mrole[39m: "[32mtenant[39m",
+    [34mstatus[39m: "[32mpending[39m",
+    [34mmobile[39m: "[32m09876789325[39m",
+    [34mprofile_image[39m: [36mnull[39m,
+    [34mid_image[39m: [36mnull[39m,
+    [34mcreated_at[39m: "[32m2025-12-31 18:33:02[39m",
+    [34mupdated_at[39m: "[32m2025-12-31 18:33:02[39m",
+  }
+

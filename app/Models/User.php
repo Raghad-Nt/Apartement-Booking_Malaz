@@ -28,7 +28,8 @@ class User extends Authenticatable
         'status',
         'mobile',
         'profile_image',
-        'id_image'
+        'id_image',
+        'fcm_token',
     ];
 
     /**
@@ -54,33 +55,33 @@ class User extends Authenticatable
         ];
     }
 
-    
-      
-     
+
+
+
     public function isAdmin()
     {
         return $this->role === 'admin';
     }
 
-    
-      
-     
+
+
+
     public function isTenant()
     {
         return $this->role === 'tenant';
     }
 
-    
-      
-     
+
+
+
     public function isRenter()
     {
         return $this->role === 'renter';
     }
 
-    
-     
-     
+
+
+
     public function isActive()
     {
         return $this->status === 'active';
@@ -112,61 +113,61 @@ class User extends Authenticatable
 
 
 
-    
-      
-     
+
+
+
     public function apartments()
     {
         return $this->hasMany(Apartment::class, 'owner_id');
     }
 
-    
-      
-     
+
+
+
     public function bookings()
     {
         return $this->hasMany(Booking::class);
     }
 
-    
-      
-     
+
+
+
     public function reviews()
     {
         return $this->hasMany(Review::class);
     }
 
-    
-      
-     
+
+
+
     public function favorites()
     {
         return $this->hasMany(Favorite::class);
     }
 
-    
-     
+
+
     public function sentMessages()
     {
         return $this->hasMany(Message::class, 'sender_id');
     }
 
-    
-      
-     
+
+
+
     public function receivedMessages()
     {
         return $this->hasMany(Message::class, 'receiver_id');
     }
 
-    
-      
-     
+
+
+
     public function wallet()
     {
         return $this->hasOne(Wallet::class);
     }
-        
+
     /**
      * Get the notifications for the user.
      */
@@ -174,6 +175,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
-     
+
 
 }

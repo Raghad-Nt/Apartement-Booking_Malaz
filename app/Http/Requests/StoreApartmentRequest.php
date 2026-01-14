@@ -12,7 +12,8 @@ class StoreApartmentRequest extends FormRequest
     public function authorize(): bool
     {
         // Only renters can create apartments
-        return $this->user() && $this->user()->isRenter();
+        //return $this->user() && $this->user()->isRenter();
+        return true;
     }
 
     /**

@@ -16,9 +16,9 @@ use Illuminate\Support\Facades\Storage;
 
 class ApartmentController extends BaseController
 {
-    
+
       //Display a listing of the resource.
-     
+
     public function index(Request $request)
     {
         $query = Apartment::with(['owner', 'images']);
@@ -50,15 +50,17 @@ class ApartmentController extends BaseController
             $query->where('status', $request->status);
         }
 
-        $apartments = $query->paginate(10);
+        // سيقرأ per_page من الرابط، وإذا لم توجد سيأخذ 10 كافتراضي
+        $perPage = $request->query('per_page', 10);
+        $apartments = $query->paginate($perPage);
 
         // Return paginated response
         return $this->sendPaginatedResponse($apartments, 'Apartments retrieved',200);
     }
 
-    
+
      //Store a newly created resource in storage.
-     
+
     public function store(StoreApartmentRequest $request)
     {
         try {
@@ -84,7 +86,11 @@ class ApartmentController extends BaseController
                         'image_path' => $imagePath
                     ]);
                 }
-            }
+            } else {
+        // هذا سيطبع في الـ Log إذا كان الطلب وصل بدون صور
+        \Log::warning('No images received for apartment creation');
+    }
+
 
             // Send notification about new apartment
             $user->notify(new ApartmentActivity('new_apartment', $apartment->id, $user->id));
@@ -100,7 +106,7 @@ class ApartmentController extends BaseController
 }
     }
 
-    
+
     public function show(Apartment $apartment)
     {
         // Load relationships
@@ -108,48 +114,43 @@ class ApartmentController extends BaseController
         return $this->sendResponse(new ApartmentResource($apartment), 'Apartment retrieved',200);
     }
 
-    
+
        //Update the specified resource in storage.
-     
+
     public function update(Request $request, Apartment $apartment)
     {
-        // Check ownership
+        // 1. التأكد من الهوية
         if ($request->user()->id !== $apartment->owner_id) {
-            return $this->sendError('Unauthorized',[],401);
+            return $this->sendError('Unauthorized', [], 401);
         }
 
-        $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'price' => 'sometimes|numeric|min:0',
-            'province' => 'sometimes|string|max:100',
-            'city' => 'sometimes|string|max:100',
-            'features' => 'nullable|array',
-            'status' => 'sometimes|in:available,booked,maintenance'
-        ]);
-
         try {
-            // Update apartment with provided fields
-            $apartment->update($request->only([
-                'title', 'description', 'price', 'province', 'city', 'features', 'status'
-            ]));
+            // 2. تحديث البيانات النصية
+            // استخدمي $request->all() أو الحقول المحددة
+            $apartment->update($request->all());
 
-            // Send notification about apartment update
+            // 3. رفع الصور (فقط إذا تم إرسال صور جديدة)
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('apartment_images', 'public');
+                    $apartment->images()->create(['image_path' => $path]);
+                }
+            }
+
+            // 4. إرسال الإشعار وتحميل العلاقات
             $request->user()->notify(new ApartmentActivity('update_apartment', $apartment->id, $request->user()->id));
-
-            // Load relationships
             $apartment->load(['owner', 'images']);
 
-            return $this->sendResponse(new ApartmentResource($apartment), 'Apartment updated',200);
-        } catch (Exception $e) {
-            // Handle update errors
-            return $this->sendError('Apartment update failed', ['error' => $e->getMessage()],500);
+            // هنا كان الخطأ (تأكدي من وجود الـ 200 في النهاية)
+            return $this->sendResponse(new ApartmentResource($apartment), 'Apartment updated', 200);
+
+        } catch (\Exception $e) {
+            return $this->sendError('Update failed', ['error' => $e->getMessage()], 500);
         }
     }
 
-    
      //Remove the specified resource from storage.
-     
+
     public function destroy(Request $request, Apartment $apartment)
     {
         // Check ownership or admin privileges
@@ -174,21 +175,21 @@ class ApartmentController extends BaseController
                  }
                 }
 
-    
+
       //Add apartment to favorites
-     
+
     public function addToFavorites(Request $request, Apartment $apartment)
     {
         $user = $request->user();
-        
+
         // Check if user is tenant
         if (!$user->isTenant()) {
             return $this->sendError('Only tenants can add apartments to favorites', [], 403);
         }
-        
+
         // Check if already favorited
         $favorite = $user->favorites()->where('apartment_id', $apartment->id)->first();
-        
+
         if ($favorite) {
             return $this->sendError('Apartment already added to favorites', [], 400);
         } else {
@@ -197,21 +198,21 @@ class ApartmentController extends BaseController
             return $this->sendResponse([], 'Apartment added to favorites',200);
         }
     }
-    
+
       //Remove apartment from favorites
-     
+
     public function removeFromFavorites(Request $request, Apartment $apartment)
     {
         $user = $request->user();
-        
+
         // Check if user is tenant
         if (!$user->isTenant()) {
             return $this->sendError('Only tenants can remove apartments from favorites', [], 403);
         }
-        
+
         // Check if already favorited
         $favorite = $user->favorites()->where('apartment_id', $apartment->id)->first();
-        
+
         if (!$favorite) {
             return $this->sendError('Apartment already removed from favorites', [], 400);
         } else {
@@ -221,9 +222,9 @@ class ApartmentController extends BaseController
         }
     }
 
-    
+
       //Get user's favorite apartments
-     
+
     public function favorites(Request $request)
     {
         $favorites = $request->user()->favorites()->with('apartment.owner', 'apartment.images')->paginate(10);
@@ -233,32 +234,32 @@ class ApartmentController extends BaseController
 
         return $this->sendPaginatedResponse($apartments, 'Favorites retrieved',200);
     }
-    
+
     /**
      * Book an apartment from the favorites list
      */
     public function bookFromFavorites(Request $request, Apartment $apartment)
     {
         $user = $request->user();
-        
+
         // Check if user is tenant
         if (!$user->isTenant()) {
             return $this->sendError('Only tenants can book apartments from favorites', [], 403);
         }
-        
+
         // Check if apartment is in user's favorites
         $favorite = $user->favorites()->where('apartment_id', $apartment->id)->first();
-        
+
         if (!$favorite) {
             return $this->sendError('This apartment is not in your favorites list', [], 404);
         }
-        
+
         // Validate booking request data
         $request->validate([
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
         ]);
-        
+
         // Check for overlapping bookings
         $existingBooking = $apartment->bookings()
             ->where('status', '!=', 'cancelled')
@@ -277,11 +278,11 @@ class ApartmentController extends BaseController
                     });
             })
             ->first();
-        
+
         if ($existingBooking) {
             return $this->sendError('This apartment is already booked for the selected dates', [], 400);
         }
-        
+
         try {
             // Calculate total price based on days
             $startDate = Carbon::parse($request->start_date);

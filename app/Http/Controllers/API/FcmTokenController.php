@@ -9,22 +9,27 @@ use App\Models\FcmToken;
 
 class FcmTokenController extends BaseController
 {
+// Laravel: FcmTokenController.php
+
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|integer',
+        // 1. الحصول على المستخدم المسجل حالياً من التوكن
+        $user = $request->user();
+
+        // 2. التحقق من البيانات
+        $request->validate([
             'fcm_token' => 'required|string',
         ]);
 
-        // تخزين التوكن في قاعدة البيانات
-        FcmToken::updateOrCreate(
-            ['user_id' => $validated['user_id']],
-            ['fcm_token' => $validated['fcm_token']]
-        );
+        // 3. التحديث في جدول المستخدمين مباشرة (العمود الذي رأيتِه)
+        $user->update([
+            'fcm_token' => $request->fcm_token
+        ]);
 
-         return $this->sendResponse([], 'FCM Token stored successfully',200);
+        return response()->json([
+            'message' => 'FCM Token saved successfully in users table'
+        ], 200);
     }
-
     public function getToken($userId)
     {
         // استرجاع التوكن من قاعدة البيانات
