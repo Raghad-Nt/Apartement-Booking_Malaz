@@ -33,7 +33,7 @@ class AdminController extends Controller
 
     public function users()
     {
-        $users = User::paginate(20);
+        $users = User::paginate(1000);
         return view('admin.users.index', compact('users'))->with('title', 'All Users');
     }
 
