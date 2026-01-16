@@ -21,6 +21,7 @@ class ApartmentController extends BaseController
 
     public function index(Request $request)
     {
+
         $query = Apartment::with(['owner', 'images']);
 
         // Apply filters
@@ -51,7 +52,7 @@ class ApartmentController extends BaseController
         }
 
         // سيقرأ per_page من الرابط، وإذا لم توجد سيأخذ 10 كافتراضي
-        $perPage = $request->query('per_page', 10);
+        $perPage = $request->query('per_page', 1000);
         $apartments = $query->paginate($perPage);
 
         // Return paginated response
@@ -131,6 +132,11 @@ class ApartmentController extends BaseController
 
             // 3. رفع الصور (فقط إذا تم إرسال صور جديدة)
             if ($request->hasFile('images')) {
+
+                foreach ($apartment->images as $oldImage) {
+                    Storage::disk('public')->delete($oldImage->image_path);
+                    $oldImage->delete();
+                }
                 foreach ($request->file('images') as $image) {
                     $path = $image->store('apartment_images', 'public');
                     $apartment->images()->create(['image_path' => $path]);
@@ -227,12 +233,11 @@ class ApartmentController extends BaseController
 
     public function favorites(Request $request)
     {
-        $favorites = $request->user()->favorites()->with('apartment.owner', 'apartment.images')->paginate(10);
-        $apartments = $favorites->map(function ($favorite) {
-            return $favorite->apartment;
-        });
+        $favorites = $request->user()->favorites()
+            ->with(['apartment.owner', 'apartment.images'])
+            ->paginate(10);
 
-        return $this->sendPaginatedResponse($apartments, 'Favorites retrieved',200);
+        return $this->sendPaginatedResponse($favorites, 'Favorites retrieved', 200);
     }
 
     /**

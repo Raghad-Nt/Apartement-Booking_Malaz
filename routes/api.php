@@ -9,12 +9,16 @@ use App\Http\Controllers\API\MessageController;
 use App\Http\Controllers\API\WalletController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\FcmTokenController;
-
+use App\Http\Controllers\DashboardController;
 
 // Authentication Routes
 Route::post('/register', [RegisterController::class, 'register']); // Register new user
 Route::post('/login', [RegisterController::class, 'login']); // Login existing user
 
+Route::middleware('auth:sanctum')->group(function () {
+    // 👈 تأكدي أن الاستدعاء يتم بهذا الشكل
+    Route::get('/owner/dashboard', [DashboardController::class, 'getOwnerStats']);
+});
 // Protected Routes (Require Authentication)
 Route::middleware('auth:sanctum')->group(function () {
     // User Profile Routes
@@ -25,10 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // FCM Token Routes
     Route::post('/store-fcm-token', [FcmTokenController::class, 'store']);// Store FCM token
     Route::get('/get-fcm-token/{userId}', [FcmTokenController::class, 'getToken']);// Get FCM token by user ID
-    
+
     // Wallet Routes (Accessible to all authenticated users)
     Route::get('/wallet/balance/{user}', [WalletController::class, 'balance']); // Get wallet balance
-    
+
     // Public Apartment Routes (Accessible to all authenticated users)
     Route::get('/apartments', [ApartmentController::class, 'index']); // List all apartments
     Route::get('/apartments/{apartment}', [ApartmentController::class, 'show']); // Show specific apartment
@@ -38,13 +42,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/apartments', [ApartmentController::class, 'store']); // Create new apartment
     Route::put('/apartments/{apartment}', [ApartmentController::class, 'update']); // Update existing apartment
     Route::delete('/apartments/{apartment}', [ApartmentController::class, 'destroy']); // Delete apartment
-    
+
     // Favorite Apartment Routes
     Route::post('/apartments/{apartment}/favorite', [ApartmentController::class, 'addToFavorites']); // Add apartment to favorites
     Route::delete('/apartments/{apartment}/favorite', [ApartmentController::class, 'removeFromFavorites']); // Remove apartment from favorites
     Route::get('/favorites', [ApartmentController::class, 'favorites']); // List user's favorite apartments
     Route::post('/favorites/{apartment}/book', [ApartmentController::class, 'bookFromFavorites']); // Book apartment from favorites list
-    
+
     // Booking Routes
     Route::post('/bookings', [BookingController::class, 'store']); // Create new booking
     Route::get('/bookings', [BookingController::class, 'index']); // List all bookings (with filters)
@@ -53,12 +57,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/bookings/{booking}/details', [BookingController::class, 'updateDetails']); // Update booking details (user)
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']); // Cancel booking (user)
     Route::get('/my-bookings', [BookingController::class, 'myBookings']); // List current user's bookings
-        
+
     // Review Routes
     Route::post('/reviews', [ReviewController::class, 'store']); // Create/update review
     Route::get('/reviews', [ReviewController::class, 'index']); // List all reviews (with filters)
-    
-    
+
+
     // Notification Routes
     Route::get('/notifications', [NotificationController::class, 'index']); // Get user's notifications
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']); // Mark notification as read

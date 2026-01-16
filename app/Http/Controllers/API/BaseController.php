@@ -1,19 +1,22 @@
 <?php
-  
+
 namespace App\Http\Controllers\API;
 
 
 use App\Http\Controllers\Controller ;
 
-  
+
 class BaseController extends Controller
 {
-    public function sendResponse($result, string $message = '', int $status)
+    public function sendResponse($result, $message, $status = 200) // أضيفي = 200 هنا
     {
-        return response()->json([
-            'message' => $message,
+        $response = [
+            'success' => true,
             'data'    => $result,
-        ], $status);
+            'message' => $message,
+        ];
+
+        return response()->json($response, $status);
     }
 
     public function sendError(string $message, array $errorMessages = [], int $status)
